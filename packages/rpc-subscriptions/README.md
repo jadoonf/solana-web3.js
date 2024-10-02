@@ -18,6 +18,31 @@ This package contains types that implement RPC subscriptions as required by the 
 
 ## Functions
 
+### `demultiplexDataPublisher(publisher, sourceChannelName, messageTransformer)`
+
+Given a channel that carries messages for multiple subscribers on a single channel name, this function returns a new `DataPublisher` that splits them into multiple channel names.
+
+Imagine a channel that carries multiple notifications whose destination is contained within the message itself.
+
+```ts
+const demuxedDataPublisher = demultiplexDataPublisher(channel, 'message', message => {
+    const destinationChannelName = `notification-for:${message.subscriberId}`;
+    return [destinationChannelName, message];
+});
+```
+
+Now you can subscribe to _only_ the messages you are interested in, without having to subscribe to the entire `'message'` channel and filter out the messages that are not for you.
+
+```ts
+demuxedDataPublisher.on(
+    'notification-for:123',
+    message => {
+        console.log('Got a message for subscriber 123', message);
+    },
+    { signal: AbortSignal.timeout(5_000) },
+);
+```
+
 ### `getChannelPoolingChannelCreator(createChannel, { maxSubscriptionsPerChannel, minChannels })`
 
 Given a channel creator, will return a new channel creator with the following behavior.
