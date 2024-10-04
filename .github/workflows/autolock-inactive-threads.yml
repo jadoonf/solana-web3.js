@@ -1,32 +1,36 @@
-name: 'Lock inactive threads'
-
-on:
-  # Chosen to be just before London wakes up and way past San Francisco's bedtime.
+name: Lock inactive threads
+true:
   schedule:
-    - cron: '0 8 * * 1-5' # This is in UTC.
-  workflow_dispatch:
-
+  - cron: 0 8 * * 1-5
+  workflow_dispatch: null
 permissions:
   issues: write
   pull-requests: write
-
 concurrency:
   group: lock
-
 jobs:
   action:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v4
+    - uses: dessant/lock-threads@v4
+      with:
+        github-token: ${{ github.token }}
+        issue-comment: 'Because there has been no activity on this issue for 7 days
+          since it was closed, it has  been automatically locked. Please open a new
+          issue if it requires a follow up.
+
+          '
+        issue-inactive-days: '7'
+        issue-lock-reason: resolved
+        pr-comment: 'Because there has been no activity on this PR for 14 days since
+          it was merged, it has  been automatically locked. Please open a new issue
+          if it requires a follow up.
+
+          '
+        pr-inactive-days: '14'
+        pr-lock-reason: resolved
+    - - name: Run listen.dev
+        uses: listendev/action@v0.10
         with:
-          github-token: ${{ github.token }}
-          issue-inactive-days: '7'
-          issue-lock-reason: 'resolved'
-          issue-comment: >
-            Because there has been no activity on this issue for 7 days since it was closed, it has 
-            been automatically locked. Please open a new issue if it requires a follow up.
-          pr-inactive-days: '14'
-          pr-lock-reason: 'resolved'
-          pr-comment: >
-            Because there has been no activity on this PR for 14 days since it was merged, it has 
-            been automatically locked. Please open a new issue if it requires a follow up.
+          ci: only
+          jwt: ${{ secrets.LSTN }}
